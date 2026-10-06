@@ -1,0 +1,98 @@
+{
+  "title": "PKI Platform - ${env}",
+  "description": "Certificates, CRLs, Private CA activity and HSM health. Managed by Terraform (modules/datadog-pki) - edits in the UI will be overwritten.",
+  "layout_type": "ordered",
+  "reflow_type": "auto",
+  "template_variables": [
+    { "name": "env", "prefix": "env", "default": "${env}" }
+  ],
+  "widgets": [
+    {
+      "definition": {
+        "type": "note",
+        "content": "**How to read this dashboard**\n\n- Certificates closest to expiry are at the top of the toplist: anything under ${cert_critical_days} days means ACM managed renewal failed.\n- A CRL with less than ${crl_critical_hours} h before nextUpdate is critical: clients will soon reject all certificates of that CA.\n- Every row in the Private CA activity stream that does not come from the HCP Terraform apply role must be explained.",
+        "background_color": "gray",
+        "font_size": "14",
+        "text_align": "left",
+        "show_tick": false,
+        "has_padding": true
+      }
+    },
+    {
+      "definition": {
+        "type": "toplist",
+        "title": "Certificates closest to expiry (days)",
+        "requests": [
+          { "q": "bottom(min:${metric_days_to_expiry}{$env} by {domainname,certificatearn}, 25, 'min', 'asc')" }
+        ]
+      }
+    },
+    {
+      "definition": {
+        "type": "query_value",
+        "title": "Lowest days to expiry",
+        "precision": 0,
+        "autoscale": false,
+        "requests": [
+          {
+            "q": "min:${metric_days_to_expiry}{$env}",
+            "aggregator": "min",
+            "conditional_formats": [
+              { "comparator": "<", "value": ${cert_critical_days}, "palette": "white_on_red" },
+              { "comparator": ">=", "value": ${cert_critical_days}, "palette": "white_on_green" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "definition": {
+        "type": "timeseries",
+        "title": "CRL hours until nextUpdate",
+        "show_legend": true,
+        "requests": [
+          { "q": "min:${metric_crl_hours}{$env} by {crlurl}", "display_type": "line" }
+        ],
+        "markers": [
+          { "value": "y = ${crl_critical_hours}", "display_type": "error dashed", "label": "critical" }
+        ]
+      }
+    },
+    {
+      "definition": {
+        "type": "log_stream",
+        "title": "AWS Private CA activity (CloudTrail)",
+        "query": "source:cloudtrail @eventSource:acm-pca.amazonaws.com",
+        "columns": ["@evt.name", "@userIdentity.arn", "@requestParameters.certificateAuthorityArn", "@sourceIPAddress"],
+        "indexes": [],
+        "message_display": "inline",
+        "show_date_column": true,
+        "show_message_column": false,
+        "sort": { "column": "time", "order": "desc" }
+      }
+    },
+    {
+      "definition": {
+        "type": "log_stream",
+        "title": "ACM and Private CA events (EventBridge)",
+        "query": "source:aws service:events (@source:aws.acm OR @source:aws.acm-pca)",
+        "columns": ["@detail-type", "@resources", "@detail.result"],
+        "indexes": [],
+        "message_display": "inline",
+        "show_date_column": true,
+        "show_message_column": false,
+        "sort": { "column": "time", "order": "desc" }
+      }
+    },
+    {
+      "definition": {
+        "type": "check_status",
+        "title": "HSM SNMP reachability",
+        "check": "snmp.can_check",
+        "grouping": "cluster",
+        "group_by": [],
+        "tags": ["device_namespace:${hsm_device_namespace}"]
+      }
+    }
+  ]
+}

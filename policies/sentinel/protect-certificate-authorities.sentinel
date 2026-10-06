@@ -1,0 +1,40 @@
+# Blocks any plan that would DELETE or REPLACE a certificate authority, its
+# installed certificate, or its CRL bucket.
+#
+# Why: deleting/replacing a CA invalidates every certificate it issued and
+# breaks the chain of trust. Retiring a CA is a planned operation done by the
+# break-glass procedure (docs/runbooks/ca-rotation.md), never a side effect of
+# an innocent-looking change (e.g. editing the subject forces replacement!).
+
+import "tfplan/v2" as tfplan
+
+protected_types = [
+	"aws_acmpca_certificate_authority",
+	"aws_acmpca_certificate_authority_certificate",
+]
+
+violations = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type in protected_types and
+	rc.change.actions contains "delete"
+}
+
+crl_bucket_deletions = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type is "aws_s3_bucket" and
+	rc.change.actions contains "delete" and
+	rc.change.before is not null and
+	rc.change.before.bucket matches "-crl-"
+}
+
+for violations as address, _ {
+	print("DENIED: plan deletes or replaces", address, "- CA retirement requires the break-glass runbook")
+}
+
+for crl_bucket_deletions as address, _ {
+	print("DENIED: plan deletes the CRL bucket", address)
+}
+
+main = rule {
+	length(violations) is 0 and length(crl_bucket_deletions) is 0
+}

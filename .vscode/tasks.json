@@ -1,0 +1,10 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "make check (fmt + validate + tests)", "type": "shell", "command": "make check", "group": { "kind": "test", "isDefault": true }, "problemMatcher": [] },
+    { "label": "make lambda-build", "type": "shell", "command": "make lambda-build", "problemMatcher": [] },
+    { "label": "make test-python", "type": "shell", "command": "make test-python", "problemMatcher": [] },
+    { "label": "make plan ENV=nonprod WS=pki-core", "type": "shell", "command": "make plan ENV=nonprod WS=pki-core", "problemMatcher": [] },
+    { "label": "make inventory", "type": "shell", "command": "make inventory", "problemMatcher": [] }
+  ]
+}

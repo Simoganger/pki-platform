@@ -1,0 +1,26 @@
+# Every GENERAL_PURPOSE CA must publish a CRL. SHORT_LIVED_CERTIFICATE CAs
+# (7-day certificates) may skip it: their certificates expire faster than a
+# revocation would propagate.
+
+import "tfplan/v2" as tfplan
+
+cas = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type is "aws_acmpca_certificate_authority" and
+	(rc.change.actions contains "create" or rc.change.actions contains "update") and
+	rc.change.after.usage_mode is "GENERAL_PURPOSE"
+}
+
+missing_crl = filter cas as address, rc {
+	length(rc.change.after.revocation_configuration else []) is 0 or
+	length(rc.change.after.revocation_configuration[0].crl_configuration else []) is 0 or
+	rc.change.after.revocation_configuration[0].crl_configuration[0].enabled is not true
+}
+
+for missing_crl as address, _ {
+	print("DENIED:", address, "is GENERAL_PURPOSE and must publish a CRL")
+}
+
+main = rule {
+	length(missing_crl) is 0
+}

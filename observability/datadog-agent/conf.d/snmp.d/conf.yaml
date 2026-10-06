@@ -1,0 +1,61 @@
+# Datadog Agent - SNMP integration for the HSMs (Thales Luna Network HSM 7,
+# Utimaco SecurityServer / CryptoServer).
+#
+# Deploy on a monitoring RELAY host inside the HSM management network:
+#   /etc/datadog-agent/conf.d/snmp.d/conf.yaml
+#
+# SECURITY RULES (PCI DSS 2.2 / 8.6 - no clear-text management protocols)
+#   - SNMPv3 only, security level authPriv (authentication + encryption).
+#   - SHA-256 (or stronger) authentication, AES-128 (or stronger) privacy.
+#   - Read-only VACM view on the HSM, limited to the monitoring OIDs; never SET.
+#   - HSM ACL / firewall: only this relay's IP may reach UDP 161.
+#   - Pass-phrases are NOT written here: they are resolved at runtime by the
+#     Agent secret backend (ENC[...] -> AWS Secrets Manager), and rotated.
+#
+# Device profiles: load the vendor MIBs (THALES-LUNA-MIB / UTIMACO-CS-MIB) as
+# custom Datadog profiles in conf.d/snmp.d/profiles/ so hardware sensors,
+# partition status and HSM-specific counters become metrics. Without a profile
+# you only get generic MIB-II metrics (interfaces, uptime).
+
+init_config:
+  loader: core          # Go-based SNMP check (faster, needed for NDM)
+  use_device_id_as_hostname: true
+
+instances:
+  - ip_address: 10.20.30.41
+    port: 161
+    snmp_version: 3
+    user: dd-monitor
+    authProtocol: SHA256
+    authKey: "ENC[pki/snmp/hsm-luna-01;auth_key]"
+    privProtocol: AES
+    privKey: "ENC[pki/snmp/hsm-luna-01;priv_key]"
+    namespace: hsm                # used by the Datadog monitor (device_namespace:hsm)
+    timeout: 5
+    retries: 3
+    min_collection_interval: 60
+    tags:
+      - env:prod
+      - zone:pci
+      - vendor:thales
+      - device:hsm-luna-01
+      - team:pki
+
+  - ip_address: 10.20.30.42
+    port: 161
+    snmp_version: 3
+    user: dd-monitor
+    authProtocol: SHA256
+    authKey: "ENC[pki/snmp/hsm-utimaco-01;auth_key]"
+    privProtocol: AES
+    privKey: "ENC[pki/snmp/hsm-utimaco-01;priv_key]"
+    namespace: hsm
+    timeout: 5
+    retries: 3
+    min_collection_interval: 60
+    tags:
+      - env:prod
+      - zone:pci
+      - vendor:utimaco
+      - device:hsm-utimaco-01
+      - team:pki

@@ -1,0 +1,31 @@
+{
+  "editor.formatOnSave": true,
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "editor.tabSize": 2
+  },
+  "[terraform-vars]": {
+    "editor.defaultFormatter": "hashicorp.terraform"
+  },
+  "terraform.experimentalFeatures.validateOnSave": true,
+  "terraform.experimentalFeatures.prefillRequiredFields": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.tabSize": 4
+  },
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests/python"],
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
+    "https://json.schemastore.org/dependabot-2.0.json": ".github/dependabot.yml"
+  },
+  "files.associations": {
+    "*.tftest.hcl": "terraform",
+    "*.tftpl": "json"
+  },
+  "files.exclude": {
+    "**/.terraform": true,
+    "**/__pycache__": true,
+    "lambda/dist": true
+  }
+}

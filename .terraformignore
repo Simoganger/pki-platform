@@ -1,0 +1,14 @@
+# Files NOT uploaded to HCP Terraform with the configuration.
+# (When .terraformignore exists, .gitignore is not used for uploads, so the
+# built lambda/dist packages ARE uploaded - they are needed by archive_file.)
+.git/
+.github/
+.vscode/
+docs/
+tests/
+observability/
+**/.terraform/
+**/*.tfstate
+**/*.tfvars
+!**/*.tfvars.example
+lambda/**/__pycache__/

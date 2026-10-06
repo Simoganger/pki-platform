@@ -1,0 +1,18 @@
+resource_changes = {
+	"module.issuing_ca.aws_acmpca_certificate_authority.this": {
+		"address": "module.issuing_ca.aws_acmpca_certificate_authority.this",
+		"mode":    "managed",
+		"type":    "aws_acmpca_certificate_authority",
+		"change": {
+			"actions": ["update"],
+			"before":  {"type": "SUBORDINATE"},
+			"after": {
+				"type":       "SUBORDINATE",
+				"usage_mode": "GENERAL_PURPOSE",
+				"certificate_authority_configuration": [
+					{"key_algorithm": "EC_prime256v1", "signing_algorithm": "SHA256WITHECDSA"},
+				],
+			},
+		},
+	},
+}

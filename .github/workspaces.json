@@ -1,0 +1,7 @@
+[
+  { "workspace": "pki-core-nonprod",          "directory": "environments/nonprod/pki-core",                   "environment": "nonprod" },
+  { "workspace": "pki-observability-nonprod", "directory": "environments/nonprod/observability",              "environment": "nonprod" },
+  { "workspace": "workload-payments-nonprod", "directory": "environments/nonprod/workload-payments-example",  "environment": "nonprod" },
+  { "workspace": "pki-core-prod",             "directory": "environments/prod/pki-core",                      "environment": "prod" },
+  { "workspace": "pki-observability-prod",    "directory": "environments/prod/observability",                 "environment": "prod" }
+]

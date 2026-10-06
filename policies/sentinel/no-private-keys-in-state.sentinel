@@ -1,0 +1,36 @@
+# Terraform state is readable by anyone with state access: private keys must
+# never be generated or handled by Terraform. Keys live in AWS Private CA,
+# ACM, or an HSM.
+
+import "tfplan/v2" as tfplan
+
+forbidden_types = [
+	"tls_private_key",
+	"tls_self_signed_cert",
+	"tls_locally_signed_cert",
+	"acme_certificate",
+]
+
+violations = filter tfplan.resource_changes as _, rc {
+	rc.type in forbidden_types and
+	rc.change.actions contains "create"
+}
+
+secret_with_key = filter tfplan.resource_changes as _, rc {
+	rc.type is "aws_secretsmanager_secret_version" and
+	rc.change.actions contains "create" and
+	rc.change.after is not null and
+	(rc.change.after.secret_string else "") matches "PRIVATE KEY"
+}
+
+for violations as address, _ {
+	print("DENIED:", address, "would store a private key in Terraform state")
+}
+
+for secret_with_key as address, _ {
+	print("DENIED:", address, "writes a private key through Terraform")
+}
+
+main = rule {
+	length(violations) is 0 and length(secret_with_key) is 0
+}

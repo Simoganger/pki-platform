@@ -1,0 +1,14 @@
+# /etc/systemd/system/pki-cert-sync.timer
+# Daily safety net in addition to the SSM push after each renewal.
+# Enable:  systemctl enable --now pki-cert-sync.timer
+
+[Unit]
+Description=Daily PKI certificate sync from Secrets Manager
+
+[Timer]
+OnCalendar=daily
+RandomizedDelaySec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

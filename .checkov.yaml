@@ -1,0 +1,27 @@
+# Checkov configuration. Every skip is a conscious, documented decision.
+framework:
+  - terraform
+  - github_actions
+  - secrets
+quiet: true
+compact: true
+skip-path:
+  - tests/
+  - lambda/dist/
+skip-check:
+  # CloudFront CRL distribution must serve plain HTTP (RFC 5280: CRLs are signed objects;
+  # an HTTPS dependency would be circular). See modules/crl-distribution.
+  - CKV_AWS_34   # CloudFront viewer protocol HTTPS-only (CRLs must be served over HTTP)
+  - CKV2_AWS_32  # CloudFront response headers policy (static CRL objects)
+  - CKV_AWS_310  # CloudFront origin failover: single S3 origin is acceptable for CRLs (cached)
+  - CKV_AWS_374  # CloudFront geo restriction: CRLs must be reachable by every relying party
+  - CKV_AWS_68   # CloudFront WAF: static public CRL files, no application logic
+  - CKV2_AWS_47  # CloudFront WAF Log4j rule: no WAF on the static CRL distribution
+  # Lambda functions are not attached to a VPC: they only call AWS APIs / fetch public CRLs.
+  - CKV_AWS_117
+  # Code signing for Lambda is recommended for prod but requires an AWS Signer profile per org.
+  - CKV_AWS_272
+  # S3 cross-region replication: decided per bucket by the DR plan, not by default.
+  - CKV_AWS_144
+  # S3 event notifications are configured only where needed (trail bucket for Splunk).
+  - CKV2_AWS_62

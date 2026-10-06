@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "hashicorp.terraform",
+    "hashicorp.sentinel",
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "redhat.vscode-yaml",
+    "github.vscode-github-actions",
+    "bierner.markdown-mermaid",
+    "editorconfig.editorconfig",
+    "timonwong.shellcheck"
+  ]
+}

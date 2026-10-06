@@ -1,0 +1,18 @@
+resource_changes = {
+	"module.root_ca.aws_acmpca_certificate_authority.this": {
+		"address": "module.root_ca.aws_acmpca_certificate_authority.this",
+		"mode":    "managed",
+		"type":    "aws_acmpca_certificate_authority",
+		"change": {
+			"actions": ["create"],
+			"before":  null,
+			"after": {
+				"type":       "ROOT",
+				"usage_mode": "GENERAL_PURPOSE",
+				"certificate_authority_configuration": [
+					{"key_algorithm": "RSA_2048", "signing_algorithm": "SHA256WITHRSA"},
+				],
+			},
+		},
+	},
+}

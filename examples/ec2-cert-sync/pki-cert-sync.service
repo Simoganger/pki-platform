@@ -1,0 +1,11 @@
+# /etc/systemd/system/pki-cert-sync.service
+# Replace the secret name with the output payments_batch_secret_name (or yours).
+
+[Unit]
+Description=PKI certificate sync from Secrets Manager
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pki-cert-sync.sh pki/certs/payments-batch.nonprod.internal.example.com

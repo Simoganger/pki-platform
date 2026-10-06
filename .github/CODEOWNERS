@@ -1,0 +1,19 @@
+# Every change needs a PKI engineer. Branch protection / rulesets on `main`
+# must require code owner review, 2 approvals, signed commits, and the
+# terraform-ci checks.
+
+*                                   @example-bank/pki-engineers
+
+# Production, policies and CI security: also the security architecture team.
+/environments/prod/                 @example-bank/pki-engineers @example-bank/security-architecture
+/policies/                          @example-bank/pki-engineers @example-bank/security-architecture
+/bootstrap/                         @example-bank/pki-engineers @example-bank/security-architecture
+/.github/                           @example-bank/pki-engineers @example-bank/security-architecture
+
+# Organization-wide guardrails: also the cloud platform team.
+/modules/org-guardrails/            @example-bank/pki-engineers @example-bank/cloud-platform
+/environments/org/                  @example-bank/pki-engineers @example-bank/cloud-platform
+
+# Observability content: the observability team reviews alert routing.
+/observability/                     @example-bank/pki-engineers @example-bank/observability
+/modules/datadog-pki/               @example-bank/pki-engineers @example-bank/observability

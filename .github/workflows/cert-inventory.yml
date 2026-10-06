@@ -1,0 +1,104 @@
+# Daily certificate and CA inventory (independent safety net).
+#
+# ACM, EventBridge, CloudWatch, Datadog and Splunk already alert on expiry.
+# This job is deliberately independent of all of them: it reads the accounts
+# directly, so a broken alerting chain cannot hide an expiring certificate.
+# It also produces the dated CSV used as PCI DSS 4.2.1.1 / 12.3.3 evidence.
+#
+# AWS access: GitHub OIDC -> read-only role github-pki-inventory-<env>
+# (bootstrap/aws-oidc). The role trusts ONLY jobs running in the GitHub
+# environment "inventory-<env>" of this repository.
+
+name: cert-inventory
+
+on:
+  schedule:
+    - cron: "17 11 * * *" # 07:17 Montreal (EDT) daily, off the top of the hour
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    name: Inventory ${{ matrix.env }}
+    runs-on: ubuntu-latest
+    environment: inventory-${{ matrix.env }}
+    permissions:
+      contents: read
+      id-token: write # OIDC token for AWS
+      issues: write   # open / update the expiry issue
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [nonprod, prod]
+    steps:
+      - uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38 # v5.4.0
+        with:
+          python-version: "3.13"
+
+      - run: pip install boto3 cryptography
+
+      - name: Assume read-only inventory role (OIDC)
+        uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_INVENTORY_ROLE_ARN }} # environment variable of inventory-<env>
+          role-session-name: gha-pki-inventory-${{ matrix.env }}-${{ github.run_id }}
+          aws-region: ca-central-1
+
+      - name: Run inventory
+        id: inventory
+        run: |
+          set +e
+          python scripts/cert_inventory.py \
+            --regions ca-central-1 us-east-1 \
+            --threshold-days 30 --ca-threshold-days 540 \
+            --format csv --output "inventory-${{ matrix.env }}.csv" \
+            --summary-file summary.md
+          code=$?
+          set -e
+          cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          if [ "$code" = "1" ]; then exit 1; fi
+
+      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: pki-inventory-${{ matrix.env }}-${{ github.run_id }}
+          path: inventory-${{ matrix.env }}.csv
+          retention-days: 400 # keep a year of daily evidence
+
+      - name: Open or update the expiry issue
+        if: steps.inventory.outputs.exit_code == '2'
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          ENV_NAME: ${{ matrix.env }}
+        with:
+          script: |
+            const fs = require('fs');
+            const env = process.env.ENV_NAME;
+            const title = `[PKI] Certificates or CAs expiring soon (${env})`;
+            const body = fs.readFileSync('summary.md', 'utf8') +
+              `\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}` +
+              `\nRunbook: docs/runbooks/certificate-renewal-failure.md`;
+            const { owner, repo } = context.repo;
+            const open = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', labels: 'pki-expiry' });
+            const existing = open.find(i => i.title === title);
+            if (existing) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: existing.number, body });
+            } else {
+              await github.rest.issues.create({ owner, repo, title, body, labels: ['pki-expiry', env] });
+            }
+
+      - name: Fail the job when something is at risk
+        if: steps.inventory.outputs.exit_code == '2'
+        run: |
+          echo "::error::Items expiring under threshold - see the job summary"
+          exit 1

@@ -1,0 +1,28 @@
+# helm repo add awspca https://cert-manager.github.io/aws-privateca-issuer
+# helm upgrade --install aws-privateca-issuer awspca/aws-privateca-issuer \
+#   -n cert-manager -f aws-privateca-issuer-values.yaml
+#
+# (install cert-manager itself first: https://cert-manager.io/docs/installation/helm/)
+
+serviceAccount:
+  create: true
+  name: aws-privateca-issuer   # bound to the IAM role by EKS Pod Identity (main.tf)
+
+replicaCount: 2
+
+podDisruptionBudget:
+  maxUnavailable: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 128Mi
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  capabilities:
+    drop: ["ALL"]

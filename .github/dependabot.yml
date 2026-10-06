@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # Keeps the SHA-pinned actions current (updates SHA + version comment).
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    labels: [dependencies, ci]
+
+  - package-ecosystem: terraform
+    directories:
+      - /environments/nonprod/pki-core
+      - /environments/nonprod/observability
+      - /environments/nonprod/workload-payments-example
+      - /environments/prod/pki-core
+      - /environments/prod/observability
+      - /bootstrap/aws-oidc
+      - /bootstrap/hcp-terraform
+    schedule:
+      interval: weekly
+    labels: [dependencies, terraform]
+
+  - package-ecosystem: pip
+    directories:
+      - /
+      - /lambda/acm_renewal_distributor
+    schedule:
+      interval: weekly
+    labels: [dependencies, python]

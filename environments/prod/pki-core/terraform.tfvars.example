@@ -1,0 +1,37 @@
+owner_email            = "pki-team@example.com"
+crl_hostname           = "crl.pki.example.com"
+ocsp_hostname          = "ocsp.pki.example.com"
+public_route53_zone_id = "Z0123456789ABCDEFGHIJ"
+offline_root_crl_url   = "http://crl.pki.example.com/root/example-bank-root-g1.crl"
+alert_emails           = ["pki-team@example.com"]
+
+issuing_cas = {
+  servers-issuing-g1 = {
+    usage       = "tls-server"
+    common_name = "Example Bank Servers Issuing CA G1"
+    share_with  = ["arn:aws:organizations::111111111111:ou/o-abc123/ou-abcd-33333333"]
+  }
+
+  pci-issuing-g1 = {
+    usage       = "pci"
+    common_name = "Example Bank PCI Issuing CA G1"
+    # Shared ONLY with the PCI workloads OU: keeps the cardholder data
+    # environment (CDE) scope small and auditable.
+    share_with = ["arn:aws:organizations::111111111111:ou/o-abc123/ou-abcd-44444444"]
+  }
+
+  workloads-mtls-g1 = {
+    usage               = "mtls-workload"
+    usage_mode          = "SHORT_LIVED_CERTIFICATE"
+    common_name         = "Example Bank Workloads mTLS CA G1"
+    crl_expiration_days = 1
+    ocsp_enabled        = false
+  }
+
+  windows-issuing-g1 = {
+    usage             = "windows-autoenroll"
+    common_name       = "Example Bank Windows Issuing CA G1"
+    key_algorithm     = "RSA_2048"
+    signing_algorithm = "SHA256WITHRSA"
+  }
+}

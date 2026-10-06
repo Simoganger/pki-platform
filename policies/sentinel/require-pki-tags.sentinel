@@ -1,0 +1,29 @@
+# Ownership is what turns an expiry alert into an action: every certificate
+# needs pki:owner and every CA needs pki:usage.
+
+import "tfplan/v2" as tfplan
+
+required = {
+	"aws_acm_certificate":              ["pki:owner"],
+	"aws_acmpca_certificate_authority": ["pki:usage", "pki:ca-role"],
+}
+
+resources = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type in keys(required) and
+	(rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+missing = filter resources as address, rc {
+	any required[rc.type] as tag {
+		tag not in keys(rc.change.after.tags else {})
+	}
+}
+
+for missing as address, _ {
+	print("WARNING:", address, "is missing a mandatory PKI tag")
+}
+
+main = rule {
+	length(missing) is 0
+}

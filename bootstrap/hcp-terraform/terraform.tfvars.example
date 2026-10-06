@@ -1,0 +1,18 @@
+hcp_organization = "example-bank"
+
+aws_roles = {
+  pki-nonprod = {
+    plan_role_arn  = "arn:aws:iam::111111111111:role/hcp-terraform-pki-plan-nonprod"
+    apply_role_arn = "arn:aws:iam::111111111111:role/hcp-terraform-pki-apply-nonprod"
+  }
+  pki-prod = {
+    plan_role_arn  = "arn:aws:iam::222222222222:role/hcp-terraform-pki-plan-prod"
+    apply_role_arn = "arn:aws:iam::222222222222:role/hcp-terraform-pki-apply-prod"
+  }
+  payments-nonprod = {
+    plan_role_arn  = "arn:aws:iam::444444444444:role/hcp-terraform-pki-plan-nonprod"
+    apply_role_arn = "arn:aws:iam::444444444444:role/hcp-terraform-pki-apply-nonprod"
+  }
+}
+
+# datadog_api_key / datadog_app_key: export TF_VAR_datadog_api_key=... (never write them here)

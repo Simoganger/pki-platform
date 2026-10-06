@@ -1,0 +1,34 @@
+# ClusterIssuer backed by the SHORT_LIVED workloads CA, and an example
+# Certificate for an mTLS service. Replace the ARN and region.
+apiVersion: awspca.cert-manager.io/v1beta1
+kind: AWSPCAClusterIssuer
+metadata:
+  name: workloads-mtls-g1
+spec:
+  arn: arn:aws:acm-pca:ca-central-1:111111111111:certificate-authority/REPLACE-ME
+  region: ca-central-1
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: payments-ledger-mtls
+  namespace: payments
+spec:
+  secretName: payments-ledger-mtls-tls
+  commonName: payments-ledger.payments.svc
+  dnsNames:
+    - payments-ledger.payments.svc
+    - payments-ledger.payments.svc.cluster.local
+  usages:
+    - server auth
+    - client auth
+  duration: 72h          # SHORT_LIVED CA: maximum 7 days
+  renewBefore: 24h       # renewed automatically by cert-manager
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+    rotationPolicy: Always   # new key at every renewal
+  issuerRef:
+    group: awspca.cert-manager.io
+    kind: AWSPCAClusterIssuer
+    name: workloads-mtls-g1

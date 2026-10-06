@@ -1,0 +1,41 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+# Real variable files (keep only *.tfvars.example in Git)
+*.tfvars
+*.auto.tfvars
+!*.tfvars.example
+# Lockfiles ARE committed for roots (reproducible providers); modules do not need them.
+modules/**/.terraform.lock.hcl
+
+# Build outputs
+lambda/dist/
+**/.build/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Never commit key material (belt and braces - CI also scans)
+*.key
+*.p12
+*.pfx
+*.jks
+*-key.pem
+private/
+
+# OS / editors
+.DS_Store
+.idea/

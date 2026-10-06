@@ -1,0 +1,12 @@
+resource_changes = {
+	"module.issuing_ca.aws_acmpca_certificate_authority.this": {
+		"address": "module.issuing_ca.aws_acmpca_certificate_authority.this",
+		"mode":    "managed",
+		"type":    "aws_acmpca_certificate_authority",
+		"change": {
+			"actions": ["delete", "create"],
+			"before":  {"type": "SUBORDINATE"},
+			"after":   {"type": "SUBORDINATE"},
+		},
+	},
+}

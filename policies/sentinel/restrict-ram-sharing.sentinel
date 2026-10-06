@@ -1,0 +1,36 @@
+# CAs may only be shared inside the AWS Organization, to explicit OUs or
+# accounts - never to the whole organization root, never externally.
+
+import "tfplan/v2" as tfplan
+
+shares = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type is "aws_ram_resource_share" and
+	(rc.change.actions contains "create" or rc.change.actions contains "update")
+}
+
+external = filter shares as address, rc {
+	rc.change.after.allow_external_principals is not false
+}
+
+principals = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type is "aws_ram_principal_association" and
+	rc.change.actions contains "create"
+}
+
+too_wide = filter principals as address, rc {
+	rc.change.after.principal matches ":organization/"
+}
+
+for external as address, _ {
+	print("DENIED:", address, "allows external principals")
+}
+
+for too_wide as address, _ {
+	print("DENIED:", address, "shares with the whole organization; use OUs")
+}
+
+main = rule {
+	length(external) is 0 and length(too_wide) is 0
+}

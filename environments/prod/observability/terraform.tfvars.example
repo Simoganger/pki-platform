@@ -1,0 +1,20 @@
+hcp_organization    = "example-bank"
+owner_email         = "pki-team@example.com"
+log_admin_role_arns = ["arn:aws:iam::*:role/pki-break-glass"]
+
+datadog = {
+  notify_handles          = ["@slack-pki-alerts", "@pki-team@example.com"]
+  security_notify_handles = ["@pagerduty-soc"]
+  synthetics_locations    = ["pl:example-bank-private-location-0123456789abcdef"]
+  tls_endpoints = [
+    { host = "payments-api.internal.example.com" },
+  ]
+}
+
+splunk = {
+  enabled              = true
+  reader_principal_arn = "arn:aws:iam::222222222222:role/splunk-aws-addon"
+  external_id          = "replace-with-random-external-id"
+  hec_endpoint         = "https://http-inputs-firehose-example.splunkcloud.com:443"
+  hec_token_secret_arn = "arn:aws:secretsmanager:ca-central-1:333333333333:secret:pki/splunk-hec-AbCdEf"
+}

@@ -1,0 +1,51 @@
+# Enforces the bank's cryptographic standard (PCI DSS 4.0.1 req. 4.2.1 "strong
+# cryptography" and 12.3.3 crypto inventory) on CAs and ACM certificates.
+
+import "tfplan/v2" as tfplan
+
+allowed_ca_algorithms = {
+	"ROOT":        ["RSA_4096", "EC_secp384r1", "ML_DSA_65", "ML_DSA_87"],
+	"SUBORDINATE": ["RSA_2048", "RSA_3072", "RSA_4096", "EC_prime256v1", "EC_secp384r1", "ML_DSA_44", "ML_DSA_65", "ML_DSA_87"],
+}
+
+forbidden_signing = ["SHA1WITHRSA", "SHA1WITHECDSA"]
+
+allowed_cert_algorithms = ["RSA_2048", "RSA_3072", "RSA_4096", "EC_prime256v1", "EC_secp384r1"]
+
+is_create_or_update = func(rc) {
+	return rc.change.actions contains "create" or rc.change.actions contains "update"
+}
+
+cas = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type is "aws_acmpca_certificate_authority" and
+	is_create_or_update(rc)
+}
+
+bad_cas = filter cas as address, rc {
+	rc.change.after.certificate_authority_configuration[0].key_algorithm not in allowed_ca_algorithms[rc.change.after.type] or
+	rc.change.after.certificate_authority_configuration[0].signing_algorithm in forbidden_signing
+}
+
+certs = filter tfplan.resource_changes as _, rc {
+	rc.mode is "managed" and
+	rc.type is "aws_acm_certificate" and
+	is_create_or_update(rc) and
+	rc.change.after.key_algorithm is not null
+}
+
+bad_certs = filter certs as address, rc {
+	rc.change.after.key_algorithm not in allowed_cert_algorithms
+}
+
+for bad_cas as address, _ {
+	print("DENIED:", address, "uses a key or signing algorithm outside the crypto standard")
+}
+
+for bad_certs as address, _ {
+	print("DENIED:", address, "uses a key algorithm outside the crypto standard")
+}
+
+main = rule {
+	length(bad_cas) is 0 and length(bad_certs) is 0
+}
