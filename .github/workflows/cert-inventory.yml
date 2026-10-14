@@ -12,8 +12,8 @@
 name: cert-inventory
 
 on:
-  schedule:
-    - cron: "0 0 31 2 *" # never triggers (Feb 31 does not exist)
+  # schedule:
+  #  - cron: "0 0 31 2 *" # never triggers (Feb 31 does not exist)
   workflow_dispatch:
 
 permissions:
