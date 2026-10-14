@@ -3,7 +3,7 @@ kind: Component
 metadata:
   name: pki-platform
   annotations:
-    backstage.io/techdocs-ref: dir:docs
+    backstage.io/techdocs-ref: dir:.
   description: Public Key Infrastructure platform
 spec:
   type: service
