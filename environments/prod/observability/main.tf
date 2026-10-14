@@ -25,7 +25,7 @@ terraform {
     }
     datadog = {
       source  = "DataDog/datadog"
-      version = "~> 3.70"
+      version = "~> 4.25"
     }
     tfe = {
       source  = "hashicorp/tfe"
