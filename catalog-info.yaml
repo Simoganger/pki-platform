@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: pki-platform
+  description: Public Key Infrastructure platform
+spec:
+  type: service
+  lifecycle: production
+  owner: security-team

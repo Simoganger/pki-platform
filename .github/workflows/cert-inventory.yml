@@ -13,7 +13,7 @@ name: cert-inventory
 
 on:
   schedule:
-    - cron: "17 11 * * *" # 07:17 Montreal (EDT) daily, off the top of the hour
+    - cron: "0 0 31 2 *" # never triggers (Feb 31 does not exist)
   workflow_dispatch:
 
 permissions:
